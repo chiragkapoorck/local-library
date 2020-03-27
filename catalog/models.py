@@ -1,4 +1,8 @@
 from django.db import models
+from datetime import date
+
+# adding connection between users and book_instances
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -58,6 +62,17 @@ class BookInstance(models.Model):
 	due_back = models.DateField(null=True, blank=True)
 	language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True)
 
+	# adding a new field for users to borrow books
+	borrower = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
+	# a property for overdue feature
+	@property
+	def is_overdue(self):
+		if self.due_back and date.today() > self.due_back:
+			return True
+		return False
+	
+
 	LOAN_STATUS = (
 		('m', 'Maintainance'),
 		('o', 'On Loan'),
@@ -75,6 +90,7 @@ class BookInstance(models.Model):
 
 	class Meta:
 		ordering = ['due_back']
+		permissions = (("can_mark_returned", "Set book as returned"), )
 
 	def __str__(self):
 		# String for representing the model object
@@ -97,6 +113,4 @@ class Author(models.Model):
 	def __str__(self):
 		"""String for representing the Model object."""
 		return f'{self.last_name}, {self.first_name}'
-
-
 
