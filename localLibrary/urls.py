@@ -19,6 +19,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('catalog/', include('catalog.urls')),
+    path('catalog/', include('books.urls')),
 ]
 
 #Add URL maps to redirect the base url to our application

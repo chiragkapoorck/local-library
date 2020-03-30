@@ -1,7 +1,10 @@
 from django.shortcuts import render
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from books.models import Book, BookInstance
+from catalog.models import Owner
+from django.views import generic
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-# Create your views here.
-from catalog.models import Book, Author, BookInstance, Genre, Language
 
 # View function for home page of sites.
 def index(request):
@@ -16,7 +19,7 @@ def index(request):
 	num_books_containing_the = Book.objects.filter(title__contains='the').count()
 
 	# The 'all()' is implied by default
-	num_authors = Author.objects.count()
+	num_users = Owner.objects.count()
 
 	# Number of visits to this view, as counted in session variable.
 	num_visits = request.session.get('num_visits', 0) # defining it to 0 because it won't be present in the first state.
@@ -26,7 +29,7 @@ def index(request):
 		'num_books': num_books,
 		'num_instances':num_instances,
 		'num_instances_available':num_instances_available,
-		'num_authors':num_authors,
+		'num_users':num_users,
 		'num_books_containing_the':num_books_containing_the,
 		'num_visits':num_visits,
 	}
@@ -34,30 +37,17 @@ def index(request):
 	# Render the HTML template index.html with the data in the context variable
 	return render(request, 'index.html', context=context)
 
-# Defining a class-based view.
-from django.views import generic
 
-class BookListView(generic.ListView):
-	model=Book
-	paginate_by = 5
-	# context_object_name = 'my_book_list' # your own name for the list as a template variable
-	# queryset = Book.objects.filter(title__icontains='war')[:5] # Get 5 books containing the title war
-	# template_name = 'books/my_arbitrary_template_name_list.html' # Specify your own template name/location
-
-# Defining another class-based view. // for book-detail view.
-class BookDetailView(generic.DetailView):
-	model = Book
-
-class AuthorListView(generic.ListView):
-	model=Author
+class UserListView(generic.ListView):
+	model= Owner
+	template_name = 'catalog/user_list.html'
 	paginate_by = 5
 
-class AuthorDetailView(generic.DetailView):
-	model=Author
+class UserDetailView(generic.DetailView):
+	model= Owner
+	template_name = 'catalog/user_detail.html'
 
 # adding the loaned book view.
-from django.contrib.auth.mixins import LoginRequiredMixin
-
 class LoanedBooksByUserListView(LoginRequiredMixin, generic.ListView):
 	""" Generic class-based view listing books on loan to current user."""
 	model = BookInstance
@@ -67,7 +57,6 @@ class LoanedBooksByUserListView(LoginRequiredMixin, generic.ListView):
 	def get_queryset(self):
 		return BookInstance.objects.filter(borrower=self.request.user).filter(status__exact='o').order_by('due_back')
 
-from django.contrib.auth.mixins import PermissionRequiredMixin
 
 class LoanedBooksByAllUsersListView(PermissionRequiredMixin, generic.ListView):
 	""" Generic class-based view listing books on loan to current user."""
@@ -79,3 +68,12 @@ class LoanedBooksByAllUsersListView(PermissionRequiredMixin, generic.ListView):
 
 	def get_queryset(self):
 		return BookInstance.objects.filter(status__exact='o').order_by('due_back')
+
+class UsersBookListView(LoginRequiredMixin, generic.ListView):
+	""" Generic class-based view listing books on loan to current user."""
+	model = Book
+	template_name = 'catalog/book_list_owned_user.html'
+	paginate_by = 5
+
+	def get_queryset(self):
+		return Book.objects.filter(owner=self.request.user)
