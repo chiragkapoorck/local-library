@@ -1,7 +1,10 @@
 <h1>local-library</h1>
 
 <p>To run the website type following in the terminal:</p>
-<p><code> python manage.py runserver </code></p>
+<code>python manage.py migrate</code>
+<code>python manage.py createsuperuser # to add an admin</code>
+<code>python manage.py runserver</code>
+
 <p>Then go to the following URL: http://127.0.0.1:8000/</p>
 
 <br><hr>
