@@ -6,6 +6,12 @@
 		<p class="text-secondary">
 			{{ author.date_of_birth }} - {% if author.date_of_death %} {{ author.date_of_death }} {% endif %}
 		</p>
+
+		{% if perms.catalog.can_mark_returned %}
+		<p><a href="{% url 'author-update' author.id %}">Update Author Details</a></p>
+		<p><a href="{% url 'author-delete' author.id %}">Delete Author</a></p>
+		{% endif %}
+
 		<h2 class="display-5">Books:</h2>
 		{% if author.book_set.all %}
 			{% for book in author.book_set.all %}
