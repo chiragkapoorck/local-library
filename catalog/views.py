@@ -1,10 +1,12 @@
 from django.shortcuts import render
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from books.models import Book, BookInstance
-from catalog.models import Owner
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
 
+from books.models import Book, BookInstance
+from catalog.models import Owner
 
 # View function for home page of sites.
 def index(request):
@@ -77,3 +79,22 @@ class UsersBookListView(LoginRequiredMixin, generic.ListView):
 
 	def get_queryset(self):
 		return Book.objects.filter(owner=self.request.user)
+
+class UserCreate(PermissionRequiredMixin,CreateView):
+	model = Owner
+	fields = '__all__'
+	template_name = 'catalog/user_form.html'
+	permission_required = 'catalog.can_mark_returned'
+
+class UserUpdate(PermissionRequiredMixin,UpdateView):
+	model = Owner
+	fields = ['first_name', 'last_name']
+	template_name = 'catalog/user_form.html'
+	permission_required = 'catalog.can_mark_returned'
+
+class UserDelete(PermissionRequiredMixin,DeleteView):
+	model = Owner
+	success_url = reverse_lazy('users') # why use the lazy version?
+	template_name = 'catalog/user_confirm_delete.html'
+	permission_required = 'catalog.can_mark_returned'
+

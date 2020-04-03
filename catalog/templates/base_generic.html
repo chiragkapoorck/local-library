@@ -31,9 +31,11 @@
 					<li><a href="{% url 'logout' %}?next={{request.path}}">Logout</a></li>
 						{% if perms.catalog.can_mark_returned %}
 						<hr>
-						<li>Staff</li>
-						{% endif %}
+						<li>Admin</li>
 						<li><a href="{% url 'all-borrowed' %}">All Borrowed</a></li>
+						<li><a href="{% url 'book-create' %}">Create Book</a></li>
+						<li><a href="{% url 'user-create' %}">Create User</a></li>
+						{% endif %}
 					{% else %}
 					<li><a href="{% url 'login' %}?next={{request.path}}">Login</a></li>
 					{% endif %}
