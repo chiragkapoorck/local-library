@@ -28,13 +28,13 @@
 					<li>User: {{user.get_username}}</li>
 					<li><a href="{% url 'my-borrowed' %}">My Borrowed</a></li>
 					<li><a href="{% url 'my-books' %}">My Books</a></li>
+					<li><a href="{% url 'book-create' %}">Add Book</a></li>
 					<li><a href="{% url 'logout' %}?next={{request.path}}">Logout</a></li>
 						{% if perms.catalog.can_mark_returned %}
 						<hr>
 
 						<li>Admin</li>
 						<li><a href="{% url 'all-borrowed' %}">All Borrowed</a></li>
-						<li><a href="{% url 'book-create' %}">Create Book</a></li>
 						<li><a href="{% url 'user-create' %}">Create User</a></li>
 						{% endif %}
 					{% else %}

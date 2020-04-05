@@ -1,4 +1,5 @@
 import datetime
+from django import forms
 from django.shortcuts import render
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views import generic
@@ -30,17 +31,39 @@ class BookDetailView(generic.DetailView):
 class BookCreate(PermissionRequiredMixin, CreateView):
 	model = Book
 	fields = '__all__'
-	permission_required = 'catalog.can_mark_returned'
+
+	def get_initial(self):
+		initial = super().get_initial()
+		initial.update({ "owner": self.request.user })
+		return initial
+	
+	def get_permission_required(self):
+		if self.request.user.is_authenticated:
+			return ''
+		return 'catalog.can_mark_returned'
+	
+	def form_valid(self, form):
+		if not self.request.user.is_superuser:
+			form.instance.owner = self.request.user
+		return super().form_valid(form)
 
 class BookUpdate(PermissionRequiredMixin, UpdateView):
 	model = Book
 	fields = '__all__'
-	permission_required = 'catalog.can_mark_returned'
+	
+	def get_permission_required(self):
+		if self.request.user == self.get_object().owner:
+			return ''
+		return 'catalog.can_mark_returned'
 
 class BookDelete(PermissionRequiredMixin, DeleteView):
 	model = Book
 	success_url = reverse_lazy('books')
-	permission_required = 'catalog.can_mark_returned'
+	
+	def get_permission_required(self):
+		if self.request.user == self.get_object().owner:
+			return ''
+		return 'catalog.can_mark_returned'
 
 
 @permission_required('catalog.can_mark_returned')
