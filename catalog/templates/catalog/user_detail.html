@@ -1,0 +1,21 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+	<div class="container">
+		<h1 class="display-3">{{ user.last_name }} {{user.first_name}}</h1>
+
+
+		{% if perms.catalog.can_mark_returned %}
+			<p><a href="{% url 'user-update' owner.id %}">Update User Details</a></p>
+			<p><a href="{% url 'user-delete' owner.id %}">Delete User</a></p>
+		{% endif %}
+
+		<h2 class="display-5">Books:</h2>
+		{% if owner.book_set.all %}
+			{% for book in owner.book_set.all %}
+				<h4 class="display-6"><a href="{{ book.get_absolute_url }}">{{ book.title }}</a></h4>
+				<p>{{ book.summary }}</p>
+			{% endfor %}
+		{% endif %}
+	</div>
+{% endblock %}
