@@ -20,6 +20,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('catalog/', include('catalog.urls')),
     path('catalog/', include('books.urls')),
+    path('register/', include('register.urls')),
+    
 ]
 
 #Add URL maps to redirect the base url to our application
