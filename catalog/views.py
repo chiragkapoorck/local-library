@@ -97,3 +97,4 @@ class UserDelete(PermissionRequiredMixin,DeleteView):
 	success_url = reverse_lazy('users') # why use the lazy version?
 	template_name = 'catalog/user_confirm_delete.html'
 	permission_required = 'catalog.can_mark_returned'
+	
