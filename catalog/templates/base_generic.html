@@ -39,6 +39,7 @@
 						{% endif %}
 					{% else %}
 					<li><a href="{% url 'login' %}?next={{request.path}}">Login</a></li>
+					<li><a href="{% url 'register' %}">Sign Up</a></li>
 					{% endif %}
 				</ul>
 				{% endblock %}

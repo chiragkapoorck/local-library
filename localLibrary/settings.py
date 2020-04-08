@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'catalog',
     'books',
     'register',
+    'crispy_forms',
     
 ]
 
@@ -129,3 +130,5 @@ STATIC_URL = '/static/'
 LOGIN_REDIRECT_URL = '/'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
