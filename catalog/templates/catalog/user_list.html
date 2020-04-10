@@ -6,7 +6,7 @@
 		<ul>
 			{% for user in owner_list %}
 				<li> 
-					<a href="{{ user.get_absolute_url }}">{{ user.first_name }} {{ user.last_name }}</a>
+					<a href="{{ user.get_absolute_url }}">{{ user.first_name }} {{ user.last_name }} ({{ user.username }})</a>
 				</li>
 			{% endfor %}
 		</ul>
