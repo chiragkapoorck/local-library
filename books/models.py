@@ -4,6 +4,7 @@ import uuid # Required for unique book instances
 from django.urls import reverse 
 # adding connection between users and book_instances
 from django.contrib.auth.models import User
+from django.forms import ValidationError
 
 """model representing a book genre"""
 class Genre(models.Model):
@@ -29,11 +30,10 @@ class Book(models.Model):
 	owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
 	summary = models.TextField(max_length=1000, help_text='Enter a brief description of the book')
-	isbn = models.CharField('ISBN', max_length=13, help_text='13 Character <a href="https://www.isbn-international.org/content/what-isbn">ISBN number</a>')
 
 	# Many to Many Field used because a genre can contain many books. And a book can have many genres.
 	# Genre class has already been defined so we can specify the object here.
-	genre = models.ManyToManyField(Genre, help_text='Select a genre for this book')
+	genre = models.ManyToManyField(Genre, help_text='Select a genre for this book', null=True)
 
 	def display_genre(self):
 		"""Create a string for the Genre. This is required to display genre in Admin."""
@@ -56,11 +56,22 @@ class BookInstance(models.Model):
 	book = models.ForeignKey('Book', on_delete=models.SET_NULL, null=True) # I think book should be there as it has already been defined above as a class
 	imprint = models.CharField(max_length=200)
 	due_back = models.DateField(null=True, blank=True)
-	language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True)
-
 	# adding a new field for users to borrow books
 	borrower = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+	STATUS = (
+		('w', 'With borrower'),
+		('r', 'Requested'),
+		('j', 'Rejected'),
+		('t', 'Returned')
+	)
 
+	status = models.CharField(
+		max_length=1,
+		choices=STATUS,
+		blank=True,
+		default='r',
+		help_text='book availability',
+	)
 	# a property for overdue feature
 	@property
 	def is_overdue(self):
@@ -69,21 +80,6 @@ class BookInstance(models.Model):
 		return False
 	
 
-	LOAN_STATUS = (
-		('m', 'Maintainance'),
-		('o', 'On Loan'),
-		('a', 'Available'),
-		('r', 'Reserved'),
-	) 
-
-	status = models.CharField(
-		max_length=1,
-		choices=LOAN_STATUS,
-		blank=True,
-		default='m',
-		help_text='book availability',
-	)
-
 	class Meta:
 		ordering = ['due_back']
 		permissions = (("can_mark_returned", "Set book as returned"), )
@@ -91,3 +87,9 @@ class BookInstance(models.Model):
 	def __str__(self):
 		# String for representing the model object
 		return f'{self.id} ({self.book.title})'
+	
+	def save(self, *args, **kwargs):
+		if self.book.owner == self.borrower:
+			raise ValidationError('Cannot rent own book', code='invalid')
+		
+		super(BookInstance, self).save(*args, **kwargs)

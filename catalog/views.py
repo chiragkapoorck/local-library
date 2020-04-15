@@ -15,7 +15,7 @@ def index(request):
 	num_instances = BookInstance.objects.all().count()
 
 	# Available Books (status = 'a')
-	num_instances_available = BookInstance.objects.filter(status__exact='a').count()
+	num_instances_available = BookInstance.objects.filter().count()
 
 	# Books containing the word "the" // should be case-insensitive.
 	num_books_containing_the = Book.objects.filter(title__contains='the').count()
@@ -57,7 +57,7 @@ class LoanedBooksByUserListView(LoginRequiredMixin, generic.ListView):
 	paginate_by = 5
 
 	def get_queryset(self):
-		return BookInstance.objects.filter(borrower=self.request.user).filter(status__exact='o').order_by('due_back')
+		return BookInstance.objects.filter(borrower=self.request.user, status__in=('r','w')).order_by('due_back')
 
 
 class LoanedBooksByAllUsersListView(PermissionRequiredMixin, generic.ListView):
@@ -69,7 +69,7 @@ class LoanedBooksByAllUsersListView(PermissionRequiredMixin, generic.ListView):
 	permission_required = 'catalog.can_mark_returned'
 
 	def get_queryset(self):
-		return BookInstance.objects.filter(status__exact='o').order_by('due_back')
+		return BookInstance.objects.order_by('due_back')
 
 class UsersBookListView(LoginRequiredMixin, generic.ListView):
 	""" Generic class-based view listing books on loan to current user."""

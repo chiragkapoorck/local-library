@@ -1,6 +1,7 @@
 import datetime
 from django import forms
 from django.shortcuts import render
+from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views import generic
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -8,7 +9,7 @@ from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.decorators import login_required, permission_required
 
 from books.models import Book, BookInstance, Genre, Language
 from books.forms import RenewBookForm
@@ -97,3 +98,73 @@ def renew_book_librarian(request, pk):
 	}
 
 	return render(request, 'book/book_renew_librarian.html', context)
+
+@login_required
+def make_request(request, pk):
+	book_obj = get_object_or_404(Book, pk=pk)
+	if book_obj.owner == request.user:
+		messages.error(request, 'cannot request your own book')
+		return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': pk}))
+
+	instance_obj = BookInstance.objects.filter(book=book_obj, borrower=request.user, status__in=('r', 'w'))
+
+	if instance_obj:
+		messages.error(request, 'You already requsted/have the book')
+		return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': pk}))
+	
+	new_instance = BookInstance(book = book_obj, borrower = request.user, due_back=(datetime.date.today() + datetime.timedelta(days=15)))
+	new_instance.save()
+	messages.success(request, 'You have successfully requested this book')
+
+	return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': pk}))
+
+@login_required
+def accept_request(request, id):
+	instance_obj = get_object_or_404(BookInstance, id=id)
+	if instance_obj.book.owner != request.user:
+		messages.error(request, 'cannot accept others book')
+		return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': instance_obj.book.pk}))
+	
+	if instance_obj.status != 'r':
+		messages.error(request, 'can accept only requested book')
+		return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': instance_obj.book.pk}))		
+
+	instance_obj.status = 'w'
+	instance_obj.save()
+	messages.success(request, 'You have accepted the request')
+
+	return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': instance_obj.book.pk}))
+
+@login_required
+def reject_request(request, id):
+	instance_obj = get_object_or_404(BookInstance, id=id)
+	if instance_obj.book.owner != request.user:
+		messages.error(request, 'cannot reject others book')
+		return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': instance_obj.book.pk}))
+	
+	if instance_obj.status != 'r':
+		messages.error(request, 'can reject only requested book')
+		return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': instance_obj.book.pk}))		
+
+	instance_obj.status = 'j'
+	instance_obj.save()
+	messages.success(request, 'You have rejected the request')
+
+	return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': instance_obj.book.pk}))
+
+@login_required
+def book_returned(request, id):
+	instance_obj = get_object_or_404(BookInstance, id=id)
+	if instance_obj.book.owner != request.user:
+		messages.error(request, 'cannot reject others book')
+		return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': instance_obj.book.pk}))
+	
+	if instance_obj.status != 'w':
+		messages.error(request, 'can mark return only borrowed book')
+		return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': instance_obj.book.pk}))		
+
+	instance_obj.status = 't'
+	instance_obj.save()
+	messages.success(request, 'You have recieved the request')
+
+	return HttpResponseRedirect(reverse('book-detail', kwargs={'pk': instance_obj.book.pk}))
